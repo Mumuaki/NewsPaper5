@@ -18,19 +18,6 @@ class Author(models.Model):
     author_rating = models.IntegerField(default=0)
 
     def generate(self):
-        # rating_post = self.post_set.aggregate(post_rating_sum=Sum('post_rating'))
-        # pRat = rating_post.get('post_rating_sum')
-
-        # rating_comment = Comment.objects.filter(comment_author=self.author_name).aggregate(
-        #     comment_rating_sum=Sum('comment_rating'))
-        # cRat = rating_comment.get('comment_rating_sum')
-
-        # rating_comment = self.author_name.comment_set.aggregate(comment_rating_sum=Sum('comment_rating'))
-        # cRat = rating_comment.get('comment_rating_sum')
-        #
-        # self.author_rating = pRat * 3 + cRat
-        # self.save()
-
         post_rating = Post.objects.filter(post_author=self.pk).aggregate(post_rating_sum=Coalesce(
             Sum('post_rating') * 3, 0))
         comment_rating = Comment.objects.filter(comment_author=self.author_name).aggregate(comment_rating_sum=Coalesce(

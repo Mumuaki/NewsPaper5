@@ -1,5 +1,6 @@
 import logging
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from datetime import datetime
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import render
@@ -87,9 +88,19 @@ class NewsFilter(FilterView):
         # return super().get(request, 'news/search.html', {}, **kwargs)
         return super().get(request, *args, **kwargs)
 
+    def has_permission(self):
+        perms = self.get_permission_required()
+        return self.request.user in self.get_object().authors.all()
 
-class NewsCreateView(LoginRequiredMixin, CreateView):
+    def dispatch(self, request, *args, **kwargs):
+        if not self.has_permission():
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
+
+class NewsCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     raise_exception = True
+    permission_required = ('news.post_add',)
     model = Post
     fields = ['title', 'content', 'categories', 'post_type', 'post_author']
     template_name = 'news_create.html'
@@ -108,7 +119,8 @@ class NewsCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class NewsUpdateView(LoginRequiredMixin, UpdateView):
+class NewsUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    permission_required = ('news.post_change',)
     model = Post
     fields = ['title', 'content', 'categories', 'post_type']
     template_name = 'news_create.html'
@@ -122,7 +134,8 @@ class NewsUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('post_id', kwargs={'pk': self.object.pk})
 
 
-class NewsDeleteView(LoginRequiredMixin, DeleteView):
+class NewsDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    permission_required = ('news.post_delete',)
     model = Post
     template_name = 'news_delete.html'
     extra_context = {'page_title': 'Удаление новостей:'}
@@ -139,8 +152,6 @@ class ArticleCreateView(LoginRequiredMixin, CreateView):
     template_name = 'articles_create.html'
     extra_context = {'page_title': 'Напишите статью:'}
 
-    # context_object_name = 'post_type'
-
     def form_valid(self, form):
         form.instance.post_type = 'A'  # Устанавливаем значение поля в зависимости от страницы
         self.object = form.save(commit=False)
@@ -154,7 +165,8 @@ class ArticleCreateView(LoginRequiredMixin, CreateView):
         return context
 
 
-class ArticleUpdateView(LoginRequiredMixin, UpdateView):
+class ArticleUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    permission_required = ('news.change_post_a',)
     model = Post
     fields = ['title', 'content', 'categories', 'post_type']
     template_name = 'articles_create.html'
@@ -169,11 +181,9 @@ class ArticleUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse('post_id', kwargs={'pk': self.object.pk})
 
-    # def get_success_url(self):
-    #     return reverse('post_id', kwargs={'pk': self.object.pk})
 
-
-class ArticleDeleteView(LoginRequiredMixin, DeleteView):
+class ArticleDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    permission_required = ('news.delete_post_a',)
     model = Post
     template_name = 'articles_delete.html'
     extra_context = {'page_title': 'Удаление статьи:'}
@@ -181,11 +191,6 @@ class ArticleDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_object(self, queryset=None):
         return self.model.objects.get(pk=self.kwargs['pk'])
-
-    # def get_context_data(self, *, object_list=None, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     # context['title'] = f'Подтверждаете удаление статьи "{self.object.title}"?'
-    #     return context
 
     def get_success_url(self):
         return reverse('news')

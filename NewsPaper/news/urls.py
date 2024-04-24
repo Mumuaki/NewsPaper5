@@ -5,8 +5,9 @@ from .views import (PostsList, PostDetail, NewsFilter, NewsCreateView, ArticleCr
 urlpatterns = [
     path('', PostsList.as_view(), name='news'),
     path('<int:pk>/', PostDetail.as_view(), name='post_id'),
+    path('articles/<int:pk>/', PostDetail.as_view(), name='post_id'),
     path('search/', NewsFilter.as_view(), name='search'),
-    path('news/create/', NewsCreateView.as_view(), name='news_create'),
+    path('create/', NewsCreateView.as_view(), name='news_create'),
     path('<int:pk>/edit/', NewsUpdateView.as_view(), name='news_edit'),
     path('<int:pk>/delete/',   NewsDeleteView.as_view(), name='news_delete'),
     path('articles/<int:pk>/edit/', ArticleUpdateView.as_view(), name='articles_edit'),
