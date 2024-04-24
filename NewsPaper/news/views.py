@@ -145,8 +145,9 @@ class NewsDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
         return self.model.objects.get(pk=self.kwargs['pk'])
 
 
-class ArticleCreateView(LoginRequiredMixin, CreateView):
+class ArticleCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     raise_exception = True
+    permission_required = ('news.add_post_a',)
     model = Post
     fields = ['title', 'content', 'categories', 'post_type', 'post_author']
     template_name = 'articles_create.html'
